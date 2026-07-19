@@ -20,3 +20,9 @@ td{
     font-size:70px;
     color:lime;
 }
+#history{
+    margin-top:20px;
+    font-size:28px;
+    color:cyan;
+    word-wrap:break-word;
+}
