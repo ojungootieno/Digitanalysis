@@ -1,27 +1,18 @@
-const appId = "YOUR_APP_ID";
+const digitElement = document.getElementById("digit");
 
-const socket = new WebSocket(
-  `wss://ws.derivws.com/websockets/v3?app_id=${appId}`
-);
-
-socket.onopen = () => {
-  console.log("Connected to Deriv");
-
-  socket.send(JSON.stringify({
-    ticks: "R_75"
-  }));
+let counts = {
+  0:0,1:0,2:0,3:0,4:0,
+  5:0,6:0,7:0,8:0,9:0
 };
 
-socket.onmessage = (event) => {
-  const data = JSON.parse(event.data);
+function analyzeDigit(digit){
 
-  if (data.tick) {
-    const price = data.tick.quote.toString();
-    const lastDigit = price.charAt(price.length - 1);
+    digitElement.textContent = digit;
 
-    document.getElementById("digit").textContent = lastDigit;
+    counts[digit]++;
 
-    console.log("Price:", price);
-    console.log("Last Digit:", lastDigit);
-  }
-};
+    for(let i=0;i<=9;i++){
+        document.getElementById("d"+i).textContent = counts[i];
+    }
+
+}
