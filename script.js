@@ -68,3 +68,28 @@ connection.onclose = () => {
     }
 
 }, 1000);
+connection.onmessage = (event) => {
+
+    const data = JSON.parse(event.data);
+
+    if (data.tick) {
+
+        const price = data.tick.quote.toString();
+
+        const digit = Number(price.slice(-1));
+
+        analyzeDigit(digit);
+
+    }
+
+};
+
+connection.onopen = () => {
+
+    connection.send(JSON.stringify({
+
+        ticks: "R_100"
+
+    }));
+
+};
