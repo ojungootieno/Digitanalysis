@@ -1,17 +1,22 @@
-body {
-    background: #111;
-    color: white;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    margin-top: 50px;
+body{
+    background:#111;
+    color:white;
+    font-family:Arial;
+    text-align:center;
 }
 
-h1 {
-    color: #00ff99;
+table{
+    margin:auto;
+    border-collapse:collapse;
 }
 
-#digit {
-    font-size: 60px;
-    font-weight: bold;
-    color: yellow;
+td{
+    border:1px solid white;
+    padding:10px 25px;
+    font-size:20px;
+}
+
+#digit{
+    font-size:70px;
+    color:lime;
 }
