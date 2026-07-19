@@ -39,3 +39,18 @@ function analyzeDigit(digit) {
         document.getElementById("d" + i).textContent = counts[i];
     }
 }
+const testDigits = [7,1,9,5,7,7,3,2,0,8,7,6,1,4,9];
+
+let index = 0;
+
+setInterval(() => {
+
+    analyzeDigit(testDigits[index]);
+
+    index++;
+
+    if (index >= testDigits.length) {
+        index = 0;
+    }
+
+}, 1000);
