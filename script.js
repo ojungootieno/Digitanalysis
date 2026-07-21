@@ -1,7 +1,9 @@
 const digitElement = document.getElementById("digit");
 const historyElement = document.getElementById("history");
 const marketSelect = document.getElementById("market");
-
+const connection = new WebSocket(
+    "wss://ws.derivws.com/websockets/v3?app_id=33ShJudJnwVSh7EiKMdyI"
+);
 let history = [];
 let counts = {
     0:0,1:0,2:0,3:0,4:0,
