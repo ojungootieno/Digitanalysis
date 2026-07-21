@@ -16,6 +16,7 @@ function resetData() {
     };
 
     historyElement.textContent = "";
+    digitElement.textContent = "-";
 
     for (let i = 0; i <= 9; i++) {
         document.getElementById("d" + i).textContent = "0";
@@ -40,28 +41,17 @@ function analyzeDigit(digit) {
     }
 }
 
-connection.onmessage = (event) => {
+// Temporary test data
+const testDigits = [7,1,9,5,7,7,3,2,0,8,7,6,1,4,9];
 
-    const data = JSON.parse(event.data);
+let index = 0;
 
-    if (data.tick) {
+setInterval(() => {
+    analyzeDigit(testDigits[index]);
 
-        const price = data.tick.quote.toString();
+    index++;
 
-        const digit = Number(price.slice(-1));
-
-        analyzeDigit(digit);
-
+    if (index >= testDigits.length) {
+        index = 0;
     }
-
-};
-
-connection.onopen = () => {
-
-    connection.send(JSON.stringify({
-
-        ticks: "R_100"
-
-    }));
-
-};
+}, 1000);
