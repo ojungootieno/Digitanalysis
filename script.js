@@ -18,7 +18,19 @@ connection.onopen = () => {
 connection.onmessage = (event) => {
     const data = JSON.parse(event.data);
 
-    console.log(data);
+    if (data.tick) {
+        const price = data.tick.quote.toString();
+        const digit = Number(price.slice(-1));
+
+        console.log("Live digit:", digit);
+
+        // For now we keep the test digits running.
+        // We will replace them with live digits in the next step.
+    }
+
+    if (data.error) {
+        console.log("Deriv error:", data.error);
+    }
 };
 
 connection.onerror = (error) => {
