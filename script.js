@@ -88,13 +88,15 @@ function connectToMarket(symbol) {
 
     };
 
-    connection.onerror = () => {
-        statusElement.textContent = "Status: Connection Error";
-    };
+    connection.onerror = (error) => {
+    console.log(error);
+    statusElement.textContent = "Status: Connection Error";
+};
 
-    connection.onclose = () => {
-        statusElement.textContent = "Status: Disconnected";
-    };
+    connection.onclose = (event) => {
+    statusElement.textContent =
+        "Closed: " + event.code + " " + event.reason;
+};
 
 }
 
