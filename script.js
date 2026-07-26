@@ -1,10 +1,9 @@
+// Copy this absolute layout backup version
 const app_id = 1089; 
 const tickSymbol = 'R_100'; 
 
 let ws;
 let pingInterval;
-
-// Memory storage to hold the count values for digits 0 through 9
 let digitCounts = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0};
 
 function connectWebSocket() {
@@ -13,20 +12,17 @@ function connectWebSocket() {
     ws.onopen = function () {
         console.log("Connected to Deriv WebSocket");
         
-        // Target your exact HTML id="status"
-        const statusElement = document.getElementById('status');
-        if (statusElement) {
-            statusElement.innerText = "Status: Connected";
-        }
+        // Safety search for your exact status HTML text matching id or inner text
+        updateUIStatus("Status: Connected");
 
-        // Keep connection active (Fix 1006 error)
+        // Maintain connection active loop (Fixes 1006 abnormal timeout drop)
         pingInterval = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ ping: 1 }));
             }
         }, 30000);
 
-        // Stream ticks instantly
+        // Stream ticks immediately
         ws.send(JSON.stringify({ ticks: tickSymbol }));
     };
 
@@ -38,21 +34,17 @@ function connectWebSocket() {
         if (data.msg_type === 'tick' && data.tick) {
             const quoteStr = data.tick.quote.toString();
             const lastDigit = parseInt(quoteStr.slice(-1));
-            console.log("New Last Digit:", lastDigit);
+            console.log("New Last Digit parsed:", lastDigit);
             
-            // Run the custom table update math
-            processNewDigit(lastDigit);
+            // Execute the layout updates safely
+            updateTableData(lastDigit);
         }
     };
 
     ws.onclose = function (error) {
-        console.log(`WebSocket closed (Code: ${error.code}). Reconnecting...`);
+        console.log(`WebSocket dropped (Code: ${error.code}). Reconnecting...`);
         clearInterval(pingInterval);
-        
-        const statusElement = document.getElementById('status');
-        if (statusElement) {
-            statusElement.innerText = "Status: Reconnecting...";
-        }
+        updateUIStatus("Status: Reconnecting...");
         
         setTimeout(() => {
             connectWebSocket();
@@ -60,30 +52,51 @@ function connectWebSocket() {
     };
 
     ws.onerror = function (err) {
-        console.error("WebSocket Error:", err);
+        console.error("WebSocket network level error encountered:", err);
         ws.close();
     };
 }
 
-// MATCHES YOUR EXACT HTML ID TARGETS
-function processNewDigit(digit) {
+function updateTableData(digit) {
     if (digit >= 0 && digit <= 9) {
-        // 1. Increment counter array
         digitCounts[digit] += 1;
 
-        // 2. Targets your specific table IDs (count0, count1, count2...)
+        // Mode 1: Targets your explicit id names: count0, count1, count2...
         const targetCell = document.getElementById(`count${digit}`);
         if (targetCell) {
             targetCell.innerText = digitCounts[digit];
         }
 
-        // 3. Targets your exact HTML last digits container id="lastDigit"
-        const lastDigitDisplay = document.getElementById('lastDigit');
+        // Mode 2: Absolute raw table structural fallback search if IDs fail to register
+        let cells = Array.from(document.querySelectorAll('td'));
+        for(let i = 0; i < cells.length; i++) {
+            if(cells[i].innerText.trim() === digit.toString()) {
+                if(cells[i+1] && !cells[i+1].id) {
+                    cells[i+1].innerText = digitCounts[digit];
+                }
+            }
+        }
+
+        // Target your explicit current digit box text id="lastDigit"
+        const lastDigitDisplay = document.getElementById('lastDigit') || document.getElementById('last-digit');
         if (lastDigitDisplay) {
             lastDigitDisplay.innerText = "Last Digit: " + digit;
         }
     }
 }
 
-// Start the tool loop
+function updateUIStatus(text) {
+    const statusElement = document.getElementById('status') || document.querySelector('.status');
+    if (statusElement) {
+        statusElement.innerText = text;
+    }
+    // Deep fallback scan across text paragraphs to catch plain text layout placeholders
+    document.querySelectorAll('p, div, h3').forEach(el => {
+        if(el.innerText.includes('Status:')) {
+            el.innerText = text;
+        }
+    });
+}
+
+// Start application tool loop
 connectWebSocket();
