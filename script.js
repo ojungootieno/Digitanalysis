@@ -55,8 +55,8 @@ function connectToMarket(symbol) {
     statusElement.textContent = "Status: Connecting...";
 
     connection = new WebSocket(
-        "wss://ws.deriv.com/websockets/v3?app_id=33ShJudJnwVSh7EiKMdyI"
-    );
+    "wss://ws.binaryws.com/websockets/v3"
+);
 
     connection.onopen = () => {
 
