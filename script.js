@@ -1,110 +1,69 @@
-const digitElement = document.getElementById("digit");
-const historyElement = document.getElementById("history");
-const marketSelect = document.getElementById("market");
-const statusElement = document.getElementById("status");
+const app_id = 1089; // Using standard Deriv app_id
+const token = 'rWfS9wAsbE8mY3K'; // Your active token
+const tickSymbol = 'R_100'; // Default symbol
 
-let history = [];
-let counts = {
-    0:0,1:0,2:0,3:0,4:0,
-    5:0,6:0,7:0,8:0,9:0
-};
+let ws;
+let pingInterval;
 
-function resetData() {
-    history = [];
+function connectWebSocket() {
+    ws = new WebSocket(`wss://://derivws.com{app_id}`);
 
-    counts = {
-        0:0,1:0,2:0,3:0,4:0,
-        5:0,6:0,7:0,8:0,9:0
+    ws.onopen = function () {
+        console.log("Connected to Deriv WebSocket");
+        
+        // 1. Authorize connection
+        ws.send(JSON.stringify({ authorize: token }));
+
+        // 2. FIX FOR 1006 ERROR: Send heartbeat ping every 30 seconds
+        pingInterval = setInterval(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ ping: 1 }));
+            }
+        }, 30000);
     };
 
-    digitElement.textContent = "-";
-    historyElement.textContent = "";
-
-    for (let i = 0; i <= 9; i++) {
-        document.getElementById("d" + i).textContent = "0";
-    }
-}
-
-function analyzeDigit(digit) {
-
-    digitElement.textContent = digit;
-
-    history.unshift(digit);
-
-    if (history.length > 20) {
-        history.pop();
-    }
-
-    historyElement.textContent = history.join(" ");
-
-    counts[digit]++;
-
-    for (let i = 0; i <= 9; i++) {
-        document.getElementById("d" + i).textContent = counts[i];
-    }
-}
-
-let connection;
-
-function connectToMarket(symbol) {
-
-    if (connection) {
-        connection.close();
-    }
-
-    statusElement.textContent = "Status: Connecting...";
-
-    connection = new WebSocket(
-    "wss://ws.binaryws.com/websockets/v3"
-);
-
-    connection.onopen = () => {
-
-        statusElement.textContent = "Status: Connected";
-
-        connection.send(JSON.stringify({
-            ticks: symbol,
-            subscribe: 1
-        }));
-
-    };
-
-    connection.onmessage = (event) => {
-
+    ws.onmessage = function (event) {
         const data = JSON.parse(event.data);
 
-        if (data.error) {
-            statusElement.textContent = "Status: " + data.error.message;
+        // Ignore heartbeat replies so they don't break your metrics
+        if (data.msg_type === 'ping') return;
+
+        // Handle authorization success
+        if (data.msg_type === 'authorize' && !data.error) {
+            console.log("Authorized successfully!");
+            // Subscribe to live tick streams
+            ws.send(JSON.stringify({ ticks: tickSymbol }));
             return;
         }
 
-        if (data.tick) {
-
-            const price = data.tick.quote.toString();
-            const digit = Number(price.slice(-1));
-
-            analyzeDigit(digit);
+        // Process live digits/ticks
+        if (data.msg_type === 'tick' && data.tick) {
+            const quoteStr = data.tick.quote.toString();
+            const lastDigit = parseInt(quoteStr.slice(-1));
+            console.log("New Tick:", quoteStr, "Last Digit:", lastDigit);
+            
+            // Send digit over to your table update functions
+            if (typeof updateDigitAnalysis === 'function') {
+                updateDigitAnalysis(lastDigit);
+            }
         }
-
     };
 
-    connection.onerror = (error) => {
-    console.log(error);
-    statusElement.textContent = "Status: Connection Error";
-};
+    ws.onclose = function (error) {
+        console.log(`WebSocket closed (Code: ${error.code}). Reconnecting in 3s...`);
+        clearInterval(pingInterval);
+        
+        // AUTO-RECONNECT LOOP: Restarts connection instantly if 1006 occurs
+        setTimeout(() => {
+            connectWebSocket();
+        }, 3000);
+    };
 
-    connection.onclose = (event) => {
-    statusElement.textContent =
-        "Closed: " + event.code + " " + event.reason;
-};
-
+    ws.onerror = function (err) {
+        console.error("WebSocket Error:", err);
+        ws.close();
+    };
 }
 
-marketSelect.addEventListener("change", () => {
-
-    resetData();
-    connectToMarket(marketSelect.value);
-
-});
-
-connectToMarket(marketSelect.value);
+// Start the application
+connectWebSocket();
