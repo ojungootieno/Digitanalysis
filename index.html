@@ -169,8 +169,11 @@ marketList.forEach(m => {
 
 function connectWebSocket() {
     // This line connects cleanly to the master endpoint server layout
-    ws = new WebSocket("wss://://binaryws.com" + app_id);
-
+    ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${app_id}`);
+ws.onerror = function(error) {
+    console.error("WebSocket Error:", error);
+    document.getElementById("status").innerText = "Status: Connection Error";
+};
     ws.onopen = function() {
         document.getElementById('status').innerText = "Status: Connected";
 
