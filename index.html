@@ -195,10 +195,22 @@ ws.onerror = function(error) {
     const data = JSON.parse(event.data);
     console.log(data);
 
-    if (data.msg_type === 'ping') return;
-
-    ...
+    if (data.error) {
+        document.getElementById("status").innerText =
+            "Error: " + data.error.message;
+        return;
     }
+
+    if (data.msg_type === "ping") return;
+
+    if (data.msg_type === "tick" && data.tick) {
+        const symbol = data.tick.symbol;
+        const quoteStr = data.tick.quote.toString();
+        const lastDigit = Number(quoteStr.slice(-1));
+
+        processMarketData(symbol, lastDigit);
+    }
+};
 
         if (data.msg_type === 'tick' && data.tick) {
             const symbol = data.tick.symbol;
