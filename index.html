@@ -148,7 +148,6 @@ const marketList = [
     'JD10', 'JD25', 'JD50', 'JD75', 'JD100'
 ]; 
 
-// Simple names tracking for cleaner dashboard display strings
 const marketNames = {
     'R_10': 'Vol 10', 'R_25': 'Vol 25', 'R_50': 'Vol 50', 'R_75': 'Vol 75', 'R_100': 'Vol 100',
     '1HZ10V': 'Vol 10 (1s)', '1HZ25V': 'Vol 25 (1s)', '1HZ50V': 'Vol 50 (1s)', '1HZ75V': 'Vol 75 (1s)', '1HZ100V': 'Vol 100 (1s)', '1HZ150V': 'Vol 150 (1s)', '1HZ250V': 'Vol 250 (1s)',
@@ -169,7 +168,8 @@ marketList.forEach(m => {
 });
 
 function connectWebSocket() {
-    ws = new WebSocket("wss://://binary.com" + app_id);
+    // This line connects cleanly to the master endpoint server layout
+    ws = new WebSocket("wss://://binaryws.com" + app_id);
 
     ws.onopen = function() {
         document.getElementById('status').innerText = "Status: Connected";
@@ -180,7 +180,6 @@ function connectWebSocket() {
             }
         }, 30000);
 
-        // Safely loop and subscribe to every active index layout parameter
         marketList.forEach(symbol => {
             ws.send(JSON.stringify({ ticks: symbol }));
         });
