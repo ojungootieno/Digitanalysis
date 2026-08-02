@@ -104,7 +104,6 @@
         <div id="status">Status: Connecting...</div>
     </div>
 
-    <!-- Live Market Scoring & Signals Leaderboard Box -->
     <div id="bestMarketsBox" class="metrics-box">
         <h3 style="margin-top:0; color:#38bdf8; text-align:center;">📊 Market Scoring</h3>
         <div style="text-align:center; color:#888;">Waiting for data stream...</div>
@@ -131,9 +130,7 @@ function connectWebSocket() {
     ws = new WebSocket("wss://://derivws.com" + app_id);
 
     ws.onopen = function() {
-        console.log("Connected Successfully");
-        const statusBox = document.getElementById('status');
-        if (statusBox) statusBox.innerText = "Status: Connected";
+        document.getElementById('status').innerText = "Status: Connected";
 
         pingInterval = setInterval(() => {
             if (ws.readyState === WebSocket.OPEN) {
@@ -161,8 +158,7 @@ function connectWebSocket() {
 
     ws.onclose = function() {
         clearInterval(pingInterval);
-        const statusBox = document.getElementById('status');
-        if (statusBox) statusBox.innerText = "Status: Reconnecting...";
+        document.getElementById('status').innerText = "Status: Reconnecting...";
         setTimeout(connectWebSocket, 3000);
     };
 }
@@ -180,12 +176,9 @@ function processMarketData(symbol, digit) {
 
     const activeSelection = document.getElementById('market').value;
     if (symbol === activeSelection) {
-        const lastDigitBox = document.getElementById('lastDigit');
-        if (lastDigitBox) lastDigitBox.innerText = "Last Digit: " + digit;
-        
+        document.getElementById('lastDigit').innerText = "Last Digit: " + digit;
         for (let i = 0; i <= 9; i++) {
-            const row = document.getElementById("count" + i);
-            if (row) row.innerText = m.counts[i];
+            document.getElementById("count" + i).innerText = m.counts[i];
         }
     }
 
@@ -194,10 +187,18 @@ function processMarketData(symbol, digit) {
 
 function runAnalysisLogic(symbol) {
     let m = marketMetrics[symbol];
-    if (m.history.length < 10) return; 
+    if (m.history.length < 5) return; 
 
-    let underCount = m.counts[0] + m.counts[1] + m.counts[2] + m.counts[3] + m.counts[4];
-    let overCount = m.counts[5] + m.counts[6] + m.counts[7] + m.counts[8] + m.counts[9];
+    // Safe loops to calculate Under (0-4) and Over (5-9) counts without crashing
+    let underCount = 0;
+    for (let i = 0; i <= 4; i++) {
+        underCount += m.counts[i];
+    }
+
+    let overCount = 0;
+    for (let i = 5; i <= 9; i++) {
+        overCount += m.counts[i];
+    }
 
     let total = m.history.length;
     let underPct = Math.round((underCount / total) * 100);
@@ -223,7 +224,7 @@ function renderDashboardData() {
 
     let sortedMarkets = [...marketList].sort((a, b) => marketMetrics[b].score - marketMetrics[a].score);
 
-    let htmlContent = `<h3 style='margin-top:0; color:#38bdf8; text-align:center;'>📊 Live Market Scoring & Signals</h3>`;
+    let htmlContent = "<h3 style='margin-top:0; color:#38bdf8; text-align:center;'>📊 Live Market Scoring & Signals</h3>";
     sortedMarkets.forEach((m, idx) => {
         let name = m.replace('R_', 'Volatility ');
         let data = marketMetrics[m];
@@ -245,7 +246,6 @@ function renderDashboardData() {
     leaderboard.innerHTML = htmlContent;
 }
 
-// Automatically listen to dropdown changes to immediately update table layout views
 document.getElementById('market').addEventListener('change', function() {
     let selected = this.value;
     let m = marketMetrics[selected];
