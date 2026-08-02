@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digit Analysis Tool</title>
+    <title>Digit Analysis Master Scanner</title>
     <style>
         body {
             background-color: #121212;
             color: #ffffff;
             font-family: Arial, sans-serif;
             text-align: center;
-            padding: 20px;
+            padding: 15px;
             margin: 0;
         }
         h2 {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
+            font-size: 22px;
         }
         table {
             margin: 0 auto;
@@ -22,29 +23,37 @@
             background: #1e1e1e;
             border-radius: 8px;
             overflow: hidden;
+            width: 100%;
+            max-width: 280px;
         }
         th, td {
             border: 1px solid #333;
-            padding: 12px 24px;
-            font-size: 18px;
+            padding: 10px 20px;
+            font-size: 16px;
             font-weight: bold;
         }
         th {
             background-color: #2a2a2a;
+            color: #38bdf8;
         }
         .metrics-box {
             background: #1e293b;
             color: #fff;
             padding: 15px;
             margin: 20px auto;
-            max-width: 300px;
+            max-width: 340px;
             border-radius: 8px;
             text-align: left;
             box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
+        .market-list-container {
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
         .market-row {
             border-bottom: 1px solid #334155;
-            padding: 8px 0;
+            padding: 10px 0;
             font-size: 14px;
             display: flex;
             justify-content: space-between;
@@ -52,37 +61,57 @@
         }
         .status-container {
             margin-top: 15px;
-            font-size: 16px;
+            font-size: 15px;
             color: #aaa;
         }
         select {
             background: #2a2a2a;
             color: white;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border: 1px solid #444;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 16px;
             margin-bottom: 20px;
+            width: 100%;
+            max-width: 280px;
         }
     </style>
 </head>
 <body>
 
-    <h2>Digit Frequency</h2>
+    <h2>Digit Master Scanner</h2>
 
     <select id="market">
-        <option value="R_10">Volatility 10 Index</option>
-        <option value="R_25">Volatility 25 Index</option>
-        <option value="R_50">Volatility 50 Index</option>
-        <option value="R_75">Volatility 75 Index</option>
-        <option value="R_100" selected>Volatility 100 Index</option>
+        <optgroup label="Volatility Indices">
+            <option value="R_10">Volatility 10</option>
+            <option value="R_25">Volatility 25</option>
+            <option value="R_50">Volatility 50</option>
+            <option value="R_75">Volatility 75</option>
+            <option value="R_100" selected>Volatility 100</option>
+        </optgroup>
+        <optgroup label="Volatility (1s) Indices">
+            <option value="1HZ10V">Volatility 10 (1s)</option>
+            <option value="1HZ25V">Volatility 25 (1s)</option>
+            <option value="1HZ50V">Volatility 50 (1s)</option>
+            <option value="1HZ75V">Volatility 75 (1s)</option>
+            <option value="1HZ100V">Volatility 100 (1s)</option>
+            <option value="1HZ150V">Volatility 150 (1s)</option>
+            <option value="1HZ250V">Volatility 250 (1s)</option>
+        </optgroup>
+        <optgroup label="Jump Indices">
+            <option value="JD10">Jump 10</option>
+            <option value="JD25">Jump 25</option>
+            <option value="JD50">Jump 50</option>
+            <option value="JD75">Jump 75</option>
+            <option value="JD100">Jump 100</option>
+        </optgroup>
     </select>
 
     <table>
         <thead>
             <tr>
                 <th>Digit</th>
-                <th>Frequency</th>
+                <th>Count (Last 100)</th>
             </tr>
         </thead>
         <tbody>
@@ -100,18 +129,31 @@
     </table>
 
     <div class="status-container">
-        <div id="lastDigit" style="font-size: 20px; color: #4ade80; margin-bottom: 5px; font-weight: bold;">Last Digit: --</div>
+        <div id="lastDigit" style="font-size: 22px; color: #4ade80; margin-bottom: 5px; font-weight: bold;">Last Digit: --</div>
         <div id="status">Status: Connecting...</div>
     </div>
 
     <div id="bestMarketsBox" class="metrics-box">
-        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">📊 Market Scoring</h3>
-        <div style="text-align:center; color:#888;">Waiting for data stream...</div>
+        <h3 style="margin-top:0; color:#38bdf8; text-align:center;">📊 Best Markets & Over/Under</h3>
+        <div class="market-list-container" id="leaderboardList">
+            <div style="text-align:center; color:#888; padding:10px;">Waiting for data stream...</div>
+        </div>
     </div>
 
 <script>
 const app_id = 1089;
-const marketList = ['R_10', 'R_25', 'R_50', 'R_75', 'R_100']; 
+const marketList = [
+    'R_10', 'R_25', 'R_50', 'R_75', 'R_100',
+    '1HZ10V', '1HZ25V', '1HZ50V', '1HZ75V', '1HZ100V', '1HZ150V', '1HZ250V',
+    'JD10', 'JD25', 'JD50', 'JD75', 'JD100'
+]; 
+
+// Simple names tracking for cleaner dashboard display strings
+const marketNames = {
+    'R_10': 'Vol 10', 'R_25': 'Vol 25', 'R_50': 'Vol 50', 'R_75': 'Vol 75', 'R_100': 'Vol 100',
+    '1HZ10V': 'Vol 10 (1s)', '1HZ25V': 'Vol 25 (1s)', '1HZ50V': 'Vol 50 (1s)', '1HZ75V': 'Vol 75 (1s)', '1HZ100V': 'Vol 100 (1s)', '1HZ150V': 'Vol 150 (1s)', '1HZ250V': 'Vol 250 (1s)',
+    'JD10': 'Jump 10', 'JD25': 'Jump 25', 'JD50': 'Jump 50', 'JD75': 'Jump 75', 'JD100': 'Jump 100'
+};
 
 let ws;
 let pingInterval;
@@ -138,6 +180,7 @@ function connectWebSocket() {
             }
         }, 30000);
 
+        // Safely loop and subscribe to every active index layout parameter
         marketList.forEach(symbol => {
             ws.send(JSON.stringify({ ticks: symbol }));
         });
@@ -189,7 +232,6 @@ function runAnalysisLogic(symbol) {
     let m = marketMetrics[symbol];
     if (m.history.length < 5) return; 
 
-    // Safe loops to calculate Under (0-4) and Over (5-9) counts without crashing
     let underCount = 0;
     for (let i = 0; i <= 4; i++) {
         underCount += m.counts[i];
@@ -207,43 +249,44 @@ function runAnalysisLogic(symbol) {
     let deviation = Math.abs(underPct - overPct);
     m.score = Math.min(100, Math.round((deviation / 50) * 100));
 
-    if (underPct > 55) {
+    if (underPct > 54) {
         m.suggestion = "🔥 Buy UNDER 5 (" + underPct + "% Bias)";
-    } else if (overPct > 55) {
+    } else if (overPct > 54) {
         m.suggestion = "🔥 Buy OVER 4 (" + overPct + "% Bias)";
     } else {
-        m.suggestion = "⏳ Balanced Market (No Trade)";
+        m.suggestion = "⏳ Balanced (No Trade)";
     }
 
     renderDashboardData();
 }
 
 function renderDashboardData() {
-    let leaderboard = document.getElementById('bestMarketsBox');
-    if (!leaderboard) return;
+    let listContainer = document.getElementById('leaderboardList');
+    if (!listContainer) return;
 
     let sortedMarkets = [...marketList].sort((a, b) => marketMetrics[b].score - marketMetrics[a].score);
 
-    let htmlContent = "<h3 style='margin-top:0; color:#38bdf8; text-align:center;'>📊 Live Market Scoring & Signals</h3>";
+    let htmlContent = "";
     sortedMarkets.forEach((m, idx) => {
-        let name = m.replace('R_', 'Volatility ');
+        let displayName = marketNames[m] || m;
         let data = marketMetrics[m];
-        let medal = idx === 0 ? "🏆 " : "⭐ ";
+        let medal = idx === 0 ? "🏆 " : (idx < 3 ? "⭐ " : "");
+        let scoreColor = data.score > 20 ? "#4ade80" : "#94a3b8";
         
         htmlContent += `
             <div class="market-row">
                 <div>
-                    <strong>${medal}${name}</strong><br/>
+                    <strong>${medal}${displayName}</strong><br/>
                     <span style="color:#f43f5e; font-size:12px;">${data.suggestion}</span>
                 </div>
                 <div style="text-align:right;">
-                    <span style="background:#334155; padding:4px 8px; border-radius:4px; color:#4ade80; font-weight:bold;">Score: ${data.score}/100</span>
+                    <span style="background:#334155; padding:4px 8px; border-radius:4px; color:${scoreColor}; font-weight:bold;">Score: ${data.score}</span>
                 </div>
             </div>
         `;
     });
 
-    leaderboard.innerHTML = htmlContent;
+    listContainer.innerHTML = htmlContent;
 }
 
 document.getElementById('market').addEventListener('change', function() {
