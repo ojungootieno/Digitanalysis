@@ -90,7 +90,7 @@ function runAnalysisLogic(symbol) {
     let m = marketMetrics[symbol];
     if (m.history.length < 10) return; 
 
-    // FIXED MATH COMPILATION BUG: Accurately counts thresholds
+    // THE FIXED MATH LINES: Correctly pulling from individual digit items
     let underCount = m.counts[0] + m.counts[1] + m.counts[2] + m.counts[3] + m.counts[4];
     let overCount = m.counts[5] + m.counts[6] + m.counts[7] + m.counts[8] + m.counts[9];
 
