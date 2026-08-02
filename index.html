@@ -183,14 +183,22 @@ ws.onerror = function(error) {
             }
         }, 30000);
 
-        marketList.forEach(symbol => {
-            ws.send(JSON.stringify({ ticks: symbol }));
-        });
+    marketList.forEach(symbol => {
+    ws.send(JSON.stringify({
+        ticks: symbol,
+        subscribe: 1
+    }));
+});
     };
 
     ws.onmessage = function(event) {
-        const data = JSON.parse(event.data);
-        if (data.msg_type === 'ping') return;
+    const data = JSON.parse(event.data);
+    console.log(data);
+
+    if (data.msg_type === 'ping') return;
+
+    ...
+    }
 
         if (data.msg_type === 'tick' && data.tick) {
             const symbol = data.tick.symbol;
